@@ -1,13 +1,19 @@
 import express from "express";
-import "./bot.js";
+import bodyParser from "body-parser";
+import { initBot } from "./bot.js";
 
 const app = express();
+app.use(bodyParser.json());
+
 const PORT = process.env.PORT || 3000;
+const WEBHOOK_URL = process.env.RENDER_EXTERNAL_URL;
+
+initBot(app, WEBHOOK_URL);
 
 app.get("/", (req, res) => {
-  res.send("🤖 Truth Or Dare Bot is running");
+  res.send("Bot running");
 });
 
 app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log("Server running");
 });
