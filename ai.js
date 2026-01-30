@@ -10,29 +10,26 @@ export async function getQuestion(mode) {
     });
 
     const prompt = `
-Generate ONE ${mode} question.
-Style: Fun + light roast.
+Create ONE unique ${mode} question.
+Style: Fun, friendly roast.
 Rules:
 - No NSFW
 - No hate
-- No bullying
+- No repeat questions
 - Group friendly
-- Short & simple
-Only output the question text.
+Return ONLY the question text.
 `;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
 
-    return text?.trim() || fallback(mode);
+    if (!text || text.length < 5) throw new Error("Empty");
 
-  } catch (err) {
-    console.error("Gemini error:", err);
-    return fallback(mode);
+    return text.trim();
+
+  } catch (e) {
+    return mode === "dare"
+      ? "Dare: Send a funny emoji that describes you 😂"
+      : "Truth: Who here checks their phone the most? 📱";
   }
-}
-
-function fallback(mode) {
-  if (mode === "dare") return "Dare: Change your nickname for 1 minute 😆";
-  return "Truth: Who here laughs at their own jokes the most? 😂";
 }
