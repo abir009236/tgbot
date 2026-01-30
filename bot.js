@@ -12,36 +12,46 @@ export function initBot(app, WEBHOOK_URL) {
     res.sendStatus(200);
   });
 
+  // START
   bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, "🎉 Truth or Dare!\nChoose 👇", {
+    bot.sendMessage(msg.chat.id, "🎉 Truth or Dare time!\nChoose one 👇", {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "Truth", callback_data: "truth" }],
-          [{ text: "Dare", callback_data: "dare" }],
-          [{ text: "Random", callback_data: "random" }]
+          [{ text: "Truth", callback_data: "mode_truth" }],
+          [{ text: "Dare", callback_data: "mode_dare" }],
+          [{ text: "Random", callback_data: "mode_random" }]
         ]
       }
     });
   });
 
+  // BUTTON HANDLER
   bot.on("callback_query", async (q) => {
     await bot.answerCallbackQuery(q.id);
 
-    let mode = q.data;
-    if (mode === "random") {
-      mode = Math.random() > 0.5 ? "truth" : "dare";
+    const chatId = q.message.chat.id;
+    const data = q.data;
+
+    // END GAME
+    if (data === "end") {
+      return bot.sendMessage(chatId, "Game ended 👋");
     }
 
-    if (mode === "end") {
-      return bot.sendMessage(q.message.chat.id, "Game ended 👋");
+    // DETERMINE MODE
+    let mode;
+    if (data === "mode_truth" || data === "next_truth") mode = "truth";
+    else if (data === "mode_dare" || data === "next_dare") mode = "dare";
+    else if (data === "mode_random" || data === "next_random") {
+      mode = Math.random() > 0.5 ? "truth" : "dare";
     }
 
     const question = await getQuestion(mode);
 
-    bot.sendMessage(q.message.chat.id, question, {
+    // SEND QUESTION WITH CORRECT NEXT STATE
+    bot.sendMessage(chatId, question, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "Next 🔁", callback_data: q.data }],
+          [{ text: "Next 🔁", callback_data: `next_${mode}` }],
           [{ text: "End ❌", callback_data: "end" }]
         ]
       }
