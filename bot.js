@@ -4,8 +4,9 @@ import { getQuestion } from "./ai.js";
 
 export const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
+// /start
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "Choose mode 👇", {
+  bot.sendMessage(msg.chat.id, "🎉 Truth or Dare time!\nChoose one 👇", {
     reply_markup: {
       inline_keyboard: [
         [{ text: "Truth", callback_data: "truth" }],
@@ -16,18 +17,34 @@ bot.onText(/\/start/, (msg) => {
   });
 });
 
+// Button handler
 bot.on("callback_query", async (q) => {
-  const chatId = q.message.chat.id;
-  const mode = q.data;
+  try {
+    await bot.answerCallbackQuery(q.id); // ✅ REQUIRED
 
-  const question = await getQuestion(mode);
+    const chatId = q.message.chat.id;
+    let mode = q.data;
 
-  bot.sendMessage(chatId, question, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "Next 🔁", callback_data: mode }],
-        [{ text: "End ❌", callback_data: "end" }]
-      ]
+    if (mode === "end") {
+      return bot.sendMessage(chatId, "Game ended 👋");
     }
-  });
+
+    if (mode === "random") {
+      mode = Math.random() > 0.5 ? "truth" : "dare";
+    }
+
+    const question = await getQuestion(mode);
+
+    await bot.sendMessage(chatId, question, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "Next 🔁", callback_data: q.data }],
+          [{ text: "End ❌", callback_data: "end" }]
+        ]
+      }
+    });
+
+  } catch (err) {
+    console.error("Callback error:", err);
+  }
 });
